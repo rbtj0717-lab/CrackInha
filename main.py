@@ -621,25 +621,28 @@ with tab4:
                            "두 그래프의 추세선 기울기를 비교하면 어느 쪽이 생중량 증가에 더 큰 영향을 주는지 알 수 있다.")
 
             # ── 상위·하위 개체 ──
+            # (idx → 원본 DataFrame 인덱스 라벨, val → 생중량 값)
             if has_bio:
                 st.subheader("🏆 생중량 상위·하위 개체")
                 bio_s = growth_df["생중량"].dropna()
                 if len(bio_s) >= 3:
-                    top_ids = bio_s.nlargest(min(3, len(bio_s)))
-                    bottom_ids = bio_s.nsmallest(min(3, len(bio_s)))
+                    top_n = min(3, len(bio_s))
+                    bottom_n = min(3, len(bio_s))
+                    top_series = bio_s.nlargest(top_n)
+                    bottom_series = bio_s.nsmallest(bottom_n)
 
                     ct, cb = st.columns(2)
                     with ct:
                         st.markdown("**생중량 상위 개체**")
-                        for val, idx in top_ids.items():
-                            oi = growth_df["생중량"].dropna().index.get_loc(idx)
-                            rid = growth_df.iloc[oi]["개체번호"] if "개체번호" in growth_df.columns else f"#{oi+1}"
+                        for orig_idx, val in top_series.items():
+                            row = growth_df.loc[orig_idx]
+                            rid = row["개체번호"] if "개체번호" in growth_df.columns else orig_idx
                             st.metric(label=f"개체 {rid}", value=f"{val:.2f} g")
                     with cb:
                         st.markdown("**생중량 하위 개체**")
-                        for val, idx in bottom_ids.items():
-                            oi = growth_df["생중량"].dropna().index.get_loc(idx)
-                            rid = growth_df.iloc[oi]["개체번호"] if "개체번호" in growth_df.columns else f"#{oi+1}"
+                        for orig_idx, val in bottom_series.items():
+                            row = growth_df.loc[orig_idx]
+                            rid = row["개체번호"] if "개체번호" in growth_df.columns else orig_idx
                             st.metric(label=f"개체 {rid}", value=f"{val:.2f} g")
                 else:
                     st.info("개체 수가 3개 미만이라 상위·하위 개체를 표시할 수 없습니다.")
