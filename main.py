@@ -130,7 +130,7 @@ def add_trendline(fig, x, y, color="gray", dash="dash"):
             y=y_pred,
             mode="lines",
             line=dict(color=color, dash=dash),
-            name=f"추세선",
+            name="추세선",
         )
     )
 
@@ -291,12 +291,18 @@ CV(변동계수) = (표준편차 ÷ 평균) × 100%
             st.subheader("🌿 측정 항목 현황")
             if has_shoot:
                 shoot_vals = growth_df["지상부 길이"].dropna()
-                st.write(f"- 지상부 길이: {len(shoot_vals)}개체 측정됨 (범위: {shoot_vals.min():.1f}mm ~ {shoot_vals.max():.1f}mm)")
+                st.write(
+                    f"- 지상부 길이: {len(shoot_vals)}개체 측정됨 "
+                    f"(범위: {shoot_vals.min():.1f}mm ~ {shoot_vals.max():.1f}mm)"
+                )
             else:
                 st.write("- 지상부 길이: 데이터에 없음")
             if has_root:
                 root_vals = growth_df["지하부 길이"].dropna()
-                st.write(f"- 지하부 길이: {len(root_vals)}개체 측정됨 (범위: {root_vals.min():.1f}mm ~ {root_vals.max():.1f}mm)")
+                st.write(
+                    f"- 지하부 길이: {len(root_vals)}개체 측정됨 "
+                    f"(범위: {root_vals.min():.1f}mm ~ {root_vals.max():.1f}mm)"
+                )
             else:
                 st.write("- 지하부 길이: 데이터에 없음")
         else:
@@ -376,34 +382,64 @@ with tab3:
                 valid_shoot = growth_df[["지상부 길이", "생중량"]].dropna()
                 if len(valid_shoot) >= 2:
                     r_shoot = valid_shoot["지상부 길이"].corr(valid_shoot["생중량"])
-                    st.write(f"**① 지상부 길이 ↔ 생중량**")
-                    st.write(
-                        f"- 상관계수 r = **{r_shoot:.3f}** "
-                        f"({'강한 양의 상관' if r_shoot > 0.7 else '중간 양의 상관' if r_shoot > 0.4 else '약한 상관' if r_shoot > 0 else '약한 음의 상관' if r_shoot > -0.4 else '중간 음의 상관' if r_shoot > -0.7 else '강한 음의 상관'})"
+                    st.write("**① 지상부 길이 ↔ 생중량**")
+                    strength = (
+                        "강한 양의 상관"
+                        if r_shoot > 0.7
+                        else "중간 양의 상관"
+                        if r_shoot > 0.4
+                        else "약한 상관"
+                        if r_shoot > 0
+                        else "약한 음의 상관"
+                        if r_shoot > -0.4
+                        else "중간 음의 상관"
+                        if r_shoot > -0.7
+                        else "강한 음의 상관"
                     )
                     st.write(
-                        f"- 데이터 수: {len(valid_shoot)}개체"
+                        f"- 상관계수 r = **{r_shoot:.3f}** ({strength})"
                     )
+                    st.write(f"- 데이터 수: {len(valid_shoot)}개체")
                 else:
-                    st.info("지상부 길이와 생중량 데이터가 2개 미만이라 상관계수를 구할 수 없습니다.")
+                    st.info(
+                        "지상부 길이와 생중량 데이터가 2개 미만이라 상관계수를 구할 수 없습니다."
+                    )
             else:
-                st.info("지상부 길이 또는 생중량 열이 없어 이 분석을 수행할 수 없습니다.")
+                st.info(
+                    "지상부 길이 또는 생중량 열이 없어 이 분석을 수행할 수 없습니다."
+                )
 
             # 분석2: 지하부 길이 vs 생중량
             if "지하부 길이" in growth_df.columns and "생중량" in growth_df.columns:
                 valid_root = growth_df[["지하부 길이", "생중량"]].dropna()
                 if len(valid_root) >= 2:
                     r_root = valid_root["지하부 길이"].corr(valid_root["생중량"])
-                    st.write(f"**② 지하부 길이 ↔ 생중량**")
+                    st.write("**② 지하부 길이 ↔ 생중량**")
+                    strength = (
+                        "강한 양의 상관"
+                        if r_root > 0.7
+                        else "중간 양의 상관"
+                        if r_root > 0.4
+                        else "약한 상관"
+                        if r_root > 0
+                        else "약한 음의 상관"
+                        if r_root > -0.4
+                        else "중간 음의 상관"
+                        if r_root > -0.7
+                        else "강한 음의 상관"
+                    )
                     st.write(
-                        f"- 상관계수 r = **{r_root:.3f}** "
-                        f"({'강한 양의 상관' if r_root > 0.7 else '중간 양의 상관' if r_root > 0.4 else '약한 상관' if r_root > 0 else '약한 음의 상관' if r_root > -0.4 else '중간 음의 상관' if r_root > -0.7 else '강한 음의 상관'})"
+                        f"- 상관계수 r = **{r_root:.3f}** ({strength})"
                     )
                     st.write(f"- 데이터 수: {len(valid_root)}개체")
                 else:
-                    st.info("지하부 길이와 생중량 데이터가 2개 미만이라 상관계수를 구할 수 없습니다.")
+                    st.info(
+                        "지하부 길이와 생중량 데이터가 2개 미만이라 상관계수를 구할 수 없습니다."
+                    )
             else:
-                st.info("지하부 길이 또는 생중량 열이 없어 이 분석을 수행할 수 없습니다.")
+                st.info(
+                    "지하부 길이 또는 생중량 열이 없어 이 분석을 수행할 수 없습니다."
+                )
 
             # 분석3: 어느 쪽이 더 큰 영향?
             if (
@@ -416,24 +452,28 @@ with tab3:
                     r_shoot2 = valid_both["지상부 길이"].corr(valid_both["생중량"])
                     r_root2 = valid_both["지하부 길이"].corr(valid_both["생중량"])
 
-                    st.write("**③ 지상부 vs 지하부 — 생중량에 더 큰 영향을 미치는 요인**")
+                    st.write(
+                        "**③ 지상부 vs 지하부 — 생중량에 더 큰 영향을 미치는 요인**"
+                    )
                     abs_shoot = abs(r_shoot2)
                     abs_root = abs(r_root2)
 
                     if abs_shoot > abs_root:
+                        diff_val = abs_shoot - abs_root
                         st.write(
                             f"""
 - 지상부 길이의 |r| = **{abs_shoot:.3f}**
 - 지하부 길이의 |r| = **{abs_root:.3f}**
-- → **지상부 길이**가 생중량과 더 강한 관계({|r_shoot2 - r_root2|: .3f} 차이)를 보였습니다.
+- → **지상부 길이**가 생중량과 더 강한 관계({diff_val: .3f} 차이)를 보였습니다.
                         """
                         )
                     elif abs_root > abs_shoot:
+                        diff_val = abs_root - abs_shoot
                         st.write(
                             f"""
 - 지상부 길이의 |r| = **{abs_shoot:.3f}**
 - 지하부 길이의 |r| = **{abs_root:.3f}**
-- → **지하부 길이**가 생중량과 더 강한 관계({|r_root2 - r_shoot2|: .3f} 차이)를 보였습니다.
+- → **지하부 길이**가 생중량과 더 강한 관계({diff_val: .3f} 차이)를 보였습니다.
                         """
                         )
                     else:
@@ -454,7 +494,9 @@ with tab3:
                             """
                         )
                 else:
-                    st.info("세 열 모두 데이터가 2개 미만이라 비교 분석을 할 수 없습니다.")
+                    st.info(
+                        "세 열 모두 데이터가 2개 미만이라 비교 분석을 할 수 없습니다."
+                    )
 
     except Exception as e:
         st.warning(f"⚠️ 이 부분은 데이터 형식 때문에 표시하지 못했어요: {e}")
@@ -547,9 +589,14 @@ with tab4:
                         x="지상부 길이",
                         y="생중량",
                         title="지상부 길이 vs 생중량 (산점도)",
-                        labels={"지상부 길이": "지상부 길이 (mm)", "생중량": "생중량 (g)"},
+                        labels={
+                            "지상부 길이": "지상부 길이 (mm)",
+                            "생중량": "생중량 (g)",
+                        },
                     )
-                    add_trendline(fig_shoot_scatter, valid_shoot2["지상부 길이"], valid_shoot2["생중량"])
+                    add_trendline(
+                        fig_shoot_scatter, valid_shoot2["지상부 길이"], valid_shoot2["생중량"]
+                    )
                     fig_shoot_scatter.update_layout(
                         font=dict(family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
                         xaxis_title="지상부 길이 (mm)",
@@ -558,9 +605,13 @@ with tab4:
                     )
                     st.plotly_chart(fig_shoot_scatter, width="stretch")
                 else:
-                    st.info("지상부 길이 vs 생중량 데이터가 2개 미만이라 산점도를 표시할 수 없습니다.")
+                    st.info(
+                        "지상부 길이 vs 생중량 데이터가 2개 미만이라 산점도를 표시할 수 없습니다."
+                    )
             else:
-                st.info("지상부 길이 또는 생중량 열이 없어 산점도를 표시할 수 없습니다.")
+                st.info(
+                    "지상부 길이 또는 생중량 열이 없어 산점도를 표시할 수 없습니다."
+                )
 
             # ── 산점도: 지하부 길이 vs 생중량 (다른 색) ──
             if "지하부 길이" in growth_df.columns and "생중량" in growth_df.columns:
@@ -573,9 +624,14 @@ with tab4:
                         title="지하부 길이 vs 생중량 (산점도)",
                         color="생중량",  # 생중량 값에 따라 다른 색깔
                         color_continuous_scale="Viridis",
-                        labels={"지하부 길이": "지하부 길이 (mm)", "생중량": "생중량 (g)"},
+                        labels={
+                            "지하부 길이": "지하부 길이 (mm)",
+                            "생중량": "생중량 (g)",
+                        },
                     )
-                    add_trendline(fig_root_scatter, valid_root2["지하부 길이"], valid_root2["생중량"])
+                    add_trendline(
+                        fig_root_scatter, valid_root2["지하부 길이"], valid_root2["생중량"]
+                    )
                     fig_root_scatter.update_layout(
                         font=dict(family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
                         xaxis_title="지하부 길이 (mm)",
@@ -584,13 +640,21 @@ with tab4:
                     )
                     st.plotly_chart(fig_root_scatter, width="stretch")
                 else:
-                    st.info("지하부 길이 vs 생중량 데이터가 2개 미만이라 산점도를 표시할 수 없습니다.")
+                    st.info(
+                        "지하부 길이 vs 생중량 데이터가 2개 미만이라 산점도를 표시할 수 없습니다."
+                    )
             else:
-                st.info("지하부 길이 또는 생중량 열이 없어 산점도를 표시할 수 없습니다.")
+                st.info(
+                    "지하부 길이 또는 생중량 열이 없어 산점도를 표시할 수 없습니다."
+                )
 
             # ── 두 산점도 나란히 비교 (서브플롯) ──
-            has_shoot3 = "지상부 길이" in growth_df.columns and "생중량" in growth_df.columns
-            has_root3 = "지하부 길이" in growth_df.columns and "생중량" in growth_df.columns
+            has_shoot3 = (
+                "지상부 길이" in growth_df.columns and "생중량" in growth_df.columns
+            )
+            has_root3 = (
+                "지하부 길이" in growth_df.columns and "생중량" in growth_df.columns
+            )
 
             if has_shoot3 and has_root3:
                 valid_s = growth_df[["지상부 길이", "생중량"]].dropna()
@@ -614,7 +678,9 @@ with tab4:
                         row=1,
                         col=1,
                     )
-                    add_trendline(fig_compare, valid_s["지상부 길이"], valid_s["생중량"], color="#27ae60")
+                    add_trendline(
+                        fig_compare, valid_s["지상부 길이"], valid_s["생중량"], color="#27ae60"
+                    )
 
                     fig_compare.add_trace(
                         go.Scatter(
@@ -627,7 +693,9 @@ with tab4:
                         row=1,
                         col=2,
                     )
-                    add_trendline(fig_compare, valid_r["지하부 길이"], valid_r["생중량"], color="#2980b9")
+                    add_trendline(
+                        fig_compare, valid_r["지하부 길이"], valid_r["생중량"], color="#2980b9"
+                    )
 
                     fig_compare.update_layout(
                         font=dict(family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
