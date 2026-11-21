@@ -122,7 +122,6 @@ def extract_school_name(filename):
     if filename is None:
         return "학교명 미상"
     base = os.path.splitext(filename)[0]  # 확장자 제거
-    # '_' 기준으로 앞부분만 취함 (예: 인하부고_환경데이터 → 인하부고)
     name = base.split("_")[0].strip()
     if name:
         return name
@@ -228,7 +227,6 @@ growth_file = st.sidebar.file_uploader("생육 결과 CSV", type="csv")
 # 생육 측정 항목 선택 (생육 CSV 업로드 시에만 옵션 표시)
 growth_cols = []
 if growth_file is not None:
-    # 미리 읽어서 열 확인 (캐시는 아님 — 사이드바에서 바로 사용)
     growth_raw = read_csv(growth_file)
     growth_raw = std_cols(growth_raw)
     growth_cols = [
@@ -525,7 +523,6 @@ with tab3:
                     )
                     st.write(f"- **{smaller}** 의 r = {r_sml:.3f}")
 
-                    # |차이| 표시
                     diff = abs(r_shoot) - abs(r_root)
                     st.info(
                         f"두 상관계수의 절대값 차이: {abs(diff):.3f} — "
@@ -570,14 +567,11 @@ with tab4:
         if growth_df.empty:
             st.info("☝️ 사이드바에서 생육 결과 CSV를 업로드하면 그래프가 표시됩니다.")
         else:
-            # ── 그래프에 사용할 열 확인 ──
             has_shoot = "지상부 길이" in growth_df.columns
             has_root = "지하부 길이" in growth_df.columns
             has_bio = "생중량" in growth_df.columns
 
-            # ─────────────────────────────────────────
-            # 그래프 1: 생중량 히스토그램
-            # ─────────────────────────────────────────
+            # ── 그래프 1: 생중량 히스토그램 ──
             if has_bio:
                 fig1 = go.Figure()
                 fig1.add_trace(
@@ -599,9 +593,7 @@ with tab4:
                 st.caption("히스토그램: 생중량 값의 분포를 막대그래프로 나타냄. "
                            "막대가 어느 구간에 몰려 있는지 보면 개체의 전형적인 생중량 범위를 알 수 있다.")
 
-            # ─────────────────────────────────────────
-            # 그래프 2: 지상부 길이 vs 생중량 산점도 + 추세선
-            # ─────────────────────────────────────────
+            # ── 그래프 2: 지상부 길이 vs 생중량 산점도 + 추세선 ──
             if has_shoot and has_bio:
                 fig2 = go.Figure()
                 df_clean = growth_df[["지상부 길이", "생중량"]].dropna()
@@ -616,7 +608,6 @@ with tab4:
                             hovertemplate="지상부 길이: %{x:.1f} mm<br>생중량: %{y:.2f} g<extra></extra>",
                         )
                     )
-                    # 추세선 (np.polyfit)
                     slope, intercept = np.polyfit(
                         df_clean["지상부 길이"], df_clean["생중량"], 1
                     )
@@ -658,9 +649,7 @@ with tab4:
                            "추세선(빨간 점선)은 np.polyfit로 계산한 직선. "
                            "r 값이 1에 가까울수록 지상부가 길수록 생중량이 늘어나는 경향이 뚜렷함.")
 
-            # ─────────────────────────────────────────
-            # 그래프 3: 지하부 길이 vs 생중량 산점도 + 추세선
-            # ─────────────────────────────────────────
+            # ── 그래프 3: 지하부 길이 vs 생중량 산점도 + 추세선 ──
             if has_root and has_bio:
                 fig3 = go.Figure()
                 df_clean3 = growth_df[["지하부 길이", "생중량"]].dropna()
@@ -715,9 +704,7 @@ with tab4:
                 st.caption("산점도: 뿌리가 길수록 생중량이 어떻게 변하는지 확인. "
                            "지하부 길이-생중량 r 값과 지상부 길이-생중량 r 값을 비교하면 어느 쪽이 생중량에 더 큰 영향을 주는지 판단할 수 있다.")
 
-            # ─────────────────────────────────────────
-            # 그래프 4: 지상부 + 지하부 길이 → 생중량 산점도 (통합, 두 색상)
-            # ─────────────────────────────────────────
+            # ── 그래프 4: 지상부 + 지하부 길이 → 생중량 통합 산점도 ──
             if has_shoot and has_root and has_bio:
                 fig4 = make_subplots(
                     rows=1,
@@ -754,7 +741,7 @@ with tab4:
                         col=2,
                     )
 
-                    # 추세선 추가 (왼쪽)
+                    # 추세선 (왼쪽 - 지상부)
                     sl_s, int_s = np.polyfit(
                         df_combined["지상부 길이"], df_combined["생중량"], 1
                     )
@@ -766,14 +753,14 @@ with tab4:
                             y=y_s,
                             mode="lines",
                             line=dict(color="crimson", width=2, dash="dash"),
-                            name=f"지상부 추세선",
+                            name="지상부 추세선",
                             showlegend=False,
                         ),
                         row=1,
                         col=1,
                     )
 
-                    # 추세선 추가 (오른쪽)
+                    # 추세선 (오른쪽 - 지하부)
                     sl_r, int_r = np.polyfit(
                         df_combined["지하부 길이"], df_combined["생중량"], 1
                     )
@@ -785,7 +772,7 @@ with tab4:
                             y=y_r,
                             mode="lines",
                             line=dict(color="teal", width=2, dash="dash"),
-                            name=f"지하부 추세선",
+                            name="지하부 추세선",
                             showlegend=False,
                         ),
                         row=1,
@@ -808,9 +795,7 @@ with tab4:
                            "y축은 둘 다 생중량(g). "
                            "추세선의 기울기가 더 가파른 쪽이 생중량 증가에 더 큰 영향을 주는 요인이다.")
 
-            # ─────────────────────────────────────────
-            # 상위·하위 개체 강조 (생중량 기준)
-            # ─────────────────────────────────────────
+            # ── 상위·하위 개체 강조 (생중량 기준) ──
             if has_bio:
                 st.subheader("🏆 생중량 상위·하위 개체")
                 bio_series = growth_df["생중량"].dropna()
@@ -836,7 +821,7 @@ with tab4:
                             orig_idx = growth_df["생중량"].dropna().index.get_loc(idx)
                             raw_id = growth_df.iloc[orig_idx]["개체번호"] if "개체번호" in growth_df.columns else f"#{orig_idx+1}"
                             st.metric(
-                                label=f"개체 raw_id}",
+                                label=f"개체 {raw_id}",
                                 value=f"{val:.2f} g",
                             )
                 else:
