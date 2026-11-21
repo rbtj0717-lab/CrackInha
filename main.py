@@ -160,8 +160,8 @@ EXPLANATIONS = {
     "평균": "모든 값을 더해 개수로 나눈 값 — 중심 경향성",
     "표준편차": "값이 평균에서 얼마나 흩어져 있는지 나타내는 지표",
     "상관계수(r)": "−1에서 +1 사이 값, 0에 가까우면 관계 약함, ±1에 가까울수록 강한 직선 관계",
-    "추세선": "산점도/꺾은선 그래프에서 데이터의 전체적인 방향을 직선 하나로 나타낸 선 (np.polyfit 사용)",
-    "꺾은선 그래프": "x축(길이) 순서대로 점을 찍고 선으로 이어 그린 그래프. 값의 변화 추이를 한눈에 볼 수 있다.",
+    "추세선": "산점도에서 데이터의 전체적인 방향을 직선 하나로 나타낸 선 (np.polyfit 사용)",
+    "산점도": "x축과 y축에 두 변수를 각각 놓고 각 관측값을 점으로 찍은 그래프. 두 변수가 어떤 관계에 있는지 한눈에 볼 수 있다.",
 }
 
 
@@ -300,9 +300,8 @@ with tab2:
         st.subheader("분석 방법")
         st.markdown(
             """- **상관계수(r)** 로 두 변수 간의 직선 관계 강도와 방향을 확인
-- **꺾은선 그래프(line plot)** 로 길이 순서별로 생중량이 어떻게 변하는지 시각화
-- **산점도(scatter plot)** 로 두 변수의 분포와 추세를 확인
-- **추세선(trend line)** 을 np.polyfit으로 직접 계산하여 추가
+- **산점도(scatter plot)** 로 두 변수의 분포와 추세를 시각화
+- **추세선(trend line)** 을 np.polyfit으로 직접 계산하여 산점도에 표시
 - **상위·하위 개체 확인** 으로 생육 차이가 큰 개체를 식별"""
         )
 
@@ -454,7 +453,7 @@ with tab3:
 
 
 # ═════════════════════════════════════════════
-# 탭 4: 그래프 (꺾은선 + 산점도)
+# 탭 4: 산점도 (3종)
 # ═════════════════════════════════════════════
 with tab4:
     try:
@@ -468,11 +467,11 @@ with tab4:
             has_bio = "생중량" in growth_df.columns
 
             # ─────────────────────────────────────────
-            # 꺾은선 그래프 헬퍼 (길이 순 정렬 → 선으로 연결)
+            # 산점도 헬퍼 (np.polyfit 추세선 + r 주석 포함)
             # ─────────────────────────────────────────
-            def make_line_fig(x_col, y_col, x_label, title, color, trend_color):
-                """x_col(길이) 기준으로 정렬한 꺾은선 그래프 + 추세선"""
-                d = growth_df[[x_col, y_col]].dropna().sort_values(x_col)
+            def make_scatter_fig(x_col, y_col, x_title, fig_title, pt_color, trend_color):
+                """단일 산점도 + 추세선 + r값 주석을 return"""
+                d = growth_df[[x_col, y_col]].dropna()
                 if len(d) < 2:
                     return None
                 fig = go.Figure()
@@ -480,11 +479,10 @@ with tab4:
                     go.Scatter(
                         x=d[x_col],
                         y=d[y_col],
-                        mode="lines+markers",
-                        line=dict(color=color, width=2),
-                        marker=dict(size=6, color=color),
+                        mode="markers",
+                        marker=dict(size=7, color=pt_color, opacity=0.75),
                         name="개체",
-                        hovertemplate=f"{x_label}: %{{x:.1f}} mm<br>생중량: %{{y:.2f}} g<extra></extra>",
+                        hovertemplate=f"{x_title}: %{{x:.1f}} mm<br>생중량: %{{y:.2f}} g<extra></extra>",
                     )
                 )
                 # 추세선 (np.polyfit)
@@ -500,7 +498,7 @@ with tab4:
                         name=f"추세선 (기울기={slope:.3f})",
                     )
                 )
-                # 상관계수 주석
+                # r값 주석
                 r_val = corr_safe(d[x_col], d[y_col])
                 if r_val is not None:
                     fig.add_annotation(
@@ -510,54 +508,55 @@ with tab4:
                         bordercolor="gray", borderwidth=1, font=dict(size=13),
                     )
                 fig.update_layout(
-                    title=title,
-                    xaxis_title=x_label,
+                    title=fig_title,
+                    xaxis_title=x_title,
                     yaxis_title="생중량 (g)",
                     font=dict(family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
                 )
                 return fig
 
-            # ── 꺾은선 1: 지상부 길이 → 생중량 ──
+            # ── 산점도 1: 지상부 길이 → 생중량 ──
             if has_shoot and has_bio:
-                fig_line1 = make_line_fig(
+                fig_s1 = make_scatter_fig(
                     "지상부 길이", "생중량",
                     "지상부 길이 (mm)",
-                    "지상부 길이(mm) vs 생중량(g) 꺾은선 그래프",
+                    "지상부 길이(mm) vs 생중량(g) 산점도",
                     "seagreen", "crimson",
                 )
-                if fig_line1 is not None:
-                    st.plotly_chart(fig_line1, width="stretch")
-                    st.caption("꺾은선 그래프: 지상부 길이(mm)가 작은 개체부터 큰 개체 순서로 점을 찍고 선으로 이었다. "
+                if fig_s1 is not None:
+                    st.plotly_chart(fig_s1, width="stretch")
+                    st.caption("산점도: 각 점이 하나의 개체를 나타냄. "
                                "추세선(빨간 점선)은 np.polyfit로 계산한 직선. "
-                               "길이가 길어질수록 생중량도 함께 증가하면 선이 오른쪽 위로 올라가는 모양을 보인다.")
+                               "r 값이 1에 가까울수록 지상부가 길수록 생중량이 늘어나는 경향이 뚜렷함.")
                 else:
-                    st.info("지상부 길이와 생중량의 꺾은선 그래프를 그릴 데이터가 부족합니다.")
+                    st.info("지상부 길이와 생중량의 산점도를 그릴 데이터가 부족합니다.")
 
-            # ── 꺾은선 2: 지하부 길이 → 생중량 ──
+            # ── 산점도 2: 지하부 길이 → 생중량 ──
             if has_root and has_bio:
-                fig_line2 = make_line_fig(
+                fig_s2 = make_scatter_fig(
                     "지하부 길이", "생중량",
                     "지하부 길이 (mm)",
-                    "지하부 길이(mm) vs 생중량(g) 꺾은선 그래프",
+                    "지하부 길이(mm) vs 생중량(g) 산점도",
                     "saddlebrown", "teal",
                 )
-                if fig_line2 is not None:
-                    st.plotly_chart(fig_line2, width="stretch")
-                    st.caption("꺾은선 그래프: 지하부 길이(mm) 순서로 생중량 변화를 연결했다. "
-                               "뿌리가 길수록 생중량이 늘어나는 경향이 있으면 선이 오른쪽 위로 상승한다.")
+                if fig_s2 is not None:
+                    st.plotly_chart(fig_s2, width="stretch")
+                    st.caption("산점도: 뿌리가 길수록 생중량이 어떻게 변하는지 확인. "
+                               "지하부 길이-생중량 r 값과 지상부 길이-생중량 r 값을 비교하면 "
+                               "어느 쪽이 생중량에 더 큰 영향을 주는지 판단할 수 있다.")
                 else:
-                    st.info("지하부 길이와 생중량의 꺾은선 그래프를 그릴 데이터가 부족합니다.")
+                    st.info("지하부 길이와 생중량의 산점도를 그릴 데이터가 부족합니다.")
 
-            # ── 산점도: 지상부 + 지하부 길이 → 생중량 (통합, 2색) ──
+            # ── 산점도 3: 지상부 + 지하부 길이 → 생중량 (통합, 2색, 서브플롯) ──
             if has_shoot and has_root and has_bio:
-                fig_scatter = make_subplots(
+                fig_s3 = make_subplots(
                     rows=1, cols=2,
                     subplot_titles=("지상부 길이 → 생중량", "지하부 길이 → 생중량"),
                 )
                 df_c = growth_df[["지상부 길이", "지하부 길이", "생중량"]].dropna()
                 if len(df_c) >= 2:
                     # 왼쪽: 지상부 (녹색)
-                    fig_scatter.add_trace(
+                    fig_s3.add_trace(
                         go.Scatter(
                             x=df_c["지상부 길이"], y=df_c["생중량"],
                             mode="markers",
@@ -568,7 +567,7 @@ with tab4:
                         row=1, col=1,
                     )
                     # 오른쪽: 지하부 (갈색)
-                    fig_scatter.add_trace(
+                    fig_s3.add_trace(
                         go.Scatter(
                             x=df_c["지하부 길이"], y=df_c["생중량"],
                             mode="markers",
@@ -583,7 +582,7 @@ with tab4:
                     sl_s, int_s = np.polyfit(df_c["지상부 길이"], df_c["생중량"], 1)
                     x_s = np.array([df_c["지상부 길이"].min(), df_c["지상부 길이"].max()])
                     y_s = sl_s * x_s + int_s
-                    fig_scatter.add_trace(
+                    fig_s3.add_trace(
                         go.Scatter(
                             x=x_s, y=y_s, mode="lines",
                             line=dict(color="crimson", width=2, dash="dash"),
@@ -596,7 +595,7 @@ with tab4:
                     sl_r, int_r = np.polyfit(df_c["지하부 길이"], df_c["생중량"], 1)
                     x_r = np.array([df_c["지하부 길이"].min(), df_c["지하부 길이"].max()])
                     y_r = sl_r * x_r + int_r
-                    fig_scatter.add_trace(
+                    fig_s3.add_trace(
                         go.Scatter(
                             x=x_r, y=y_r, mode="lines",
                             line=dict(color="teal", width=2, dash="dash"),
@@ -605,20 +604,21 @@ with tab4:
                         row=1, col=2,
                     )
 
-                fig_scatter.update_layout(
+                fig_s3.update_layout(
                     title="지상부·지하부 길이와 생중량의 관계 (한 화면에 비교)",
                     font=dict(family="Malgun Gothic, Apple SD Gothic Neo, sans-serif"),
                     height=500,
                 )
-                fig_scatter.update_xaxes(title_text="길이 (mm)", row=1, col=1)
-                fig_scatter.update_xaxes(title_text="길이 (mm)", row=1, col=2)
-                fig_scatter.update_yaxes(title_text="생중량 (g)", row=1, col=1)
-                fig_scatter.update_yaxes(title_text="생중량 (g)", row=1, col=2)
+                fig_s3.update_xaxes(title_text="길이 (mm)", row=1, col=1)
+                fig_s3.update_xaxes(title_text="길이 (mm)", row=1, col=2)
+                fig_s3.update_yaxes(title_text="생중량 (g)", row=1, col=1)
+                fig_s3.update_yaxes(title_text="생중량 (g)", row=1, col=2)
 
-                st.plotly_chart(fig_scatter, width="stretch")
-                st.caption("두 그래프를 한 화면에 나란히 배치. "
+                st.plotly_chart(fig_s3, width="stretch")
+                st.caption("두 산점도를 한 화면에 나란히 배치. "
                            "왼쪽은 지상부 길이(녹색 점), 오른쪽은 지하부 길이(갈색 점)를 x축으로, "
-                           "y축은 둘 다 생중량(g). 추세선의 기울기가 더 가파른 쪽이 생중량 증가에 더 큰 영향을 주는 요인이다.")
+                           "y축은 둘 다 생중량(g). "
+                           "두 그래프의 추세선 기울기를 비교하면 어느 쪽이 생중량 증가에 더 큰 영향을 주는지 알 수 있다.")
 
             # ── 상위·하위 개체 ──
             if has_bio:
